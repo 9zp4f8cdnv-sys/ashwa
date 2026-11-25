@@ -351,7 +351,8 @@ class CompanyTools:
                 kpi_view.append({"kpi_id": k["id"], "name": k["name"], "target": k["target"],
                                  "direction": k["direction"], "last_readings": vals})
                 if len(vals) == 2 and not any(self._met(v, k) for v in vals):
-                    reasons.append(f"'{k['name']}' missed target {k['target']} two readings in a row ({vals})")
+                    reasons.append(f"'{k['name']}' missed target {k['target']:g} two readings in a row "
+                                   f"({', '.join(f'{v:g}' for v in vals)})")
             last_tasks = self._all(
                 "SELECT id, status, substr(result, 1, 300) AS result_preview FROM tasks "
                 "WHERE staff_id = ? AND staff_version = ? ORDER BY id DESC LIMIT 2", s["id"], s["version"])

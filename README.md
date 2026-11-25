@@ -65,6 +65,8 @@ python setup_agent.py                    # once; re-run after editing ashwa/agen
 python run_ceo.py                        # first run: the CEO interviews you
 ```
 
+Or use it from your phone: see [Phone app](#phone-app).
+
 Each week:
 
 ```bash
@@ -75,6 +77,30 @@ Where things are saved:
 - `company.db`: all company records (SQLite, stays on your machine)
 - `reports/`: weekly reports
 - `outputs/<session>/`: plans, landing pages and drafts the CEO writes
+
+## Phone app
+
+A web page you open in your phone's browser. You can chat with the CEO, tap
+**Approve** or **Deny** when it asks, check each AI agent's KPIs (stuck ones are
+shown in red), see money in and out, and read the weekly reports.
+
+```bash
+export ASHWA_PASSWORD='a long password'   # required, at least 8 characters
+python phone_app.py --host 0.0.0.0        # then open http://<your-computer-ip>:8080 on your phone
+```
+
+- The server runs on your computer (or a small server) and the phone just opens the page.
+  The computer has to stay on.
+- On the same Wi-Fi, use the computer's local IP (for example `http://192.168.1.20:8080`).
+- **Away from home:** install [Tailscale](https://tailscale.com) (free) on the computer
+  and the phone, then open `http://<computer-tailscale-name>:8080`. **Don't** open a port
+  on your router: this page can approve spending.
+- An approval you don't answer within 30 minutes counts as **denied**. The CEO can ask
+  again later.
+- To add it to your home screen: Share → **Add to Home Screen** (iPhone) or
+  ⋮ → **Add to Home screen** (Android).
+- Set `ASHWA_SECRET_KEY` to any long random string if you want to stay logged in after
+  the server restarts.
 
 ## Costs
 

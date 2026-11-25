@@ -13,22 +13,13 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from pathlib import Path
 
 import anthropic
 
 from ashwa.company import CompanyTools
 from ashwa.db import connect
-from ashwa.session import SessionRunner, create_session
+from ashwa.session import GREETING, REVIEW_PROMPT, STATE_FILE, SessionRunner, create_session
 from ashwa.staff import StaffRunner
-
-STATE_FILE = Path(".ashwa.json")
-
-REVIEW_PROMPT = (
-    "Weekly review. Check company state, record any real KPI numbers you have, run "
-    "review_staff, fix or replace stuck agents as your instructions say, then write_report. "
-    "Finish by listing the decisions you need from me."
-)
 
 
 def ask(prompt: str) -> str:
@@ -73,7 +64,7 @@ def main() -> None:
         confirm_builtin=yes_no,
     )
 
-    first = REVIEW_PROMPT if args.review else "Hello. Check where we are and tell me what you need from me."
+    first = REVIEW_PROMPT if args.review else GREETING
     text = first
     while text:
         print("ceo> ", end="", flush=True)

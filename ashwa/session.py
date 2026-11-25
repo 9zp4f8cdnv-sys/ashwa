@@ -14,6 +14,15 @@ import anthropic
 
 from .company import CompanyTools, ToolError
 
+STATE_FILE = Path(".ashwa.json")
+
+GREETING = "Hello. Check where we are and tell me what you need from me."
+REVIEW_PROMPT = (
+    "Weekly review. Check company state, record any real KPI numbers you have, run "
+    "review_staff, fix or replace stuck agents as your instructions say, then write_report. "
+    "Finish by listing the decisions you need from me."
+)
+
 
 class SessionRunner:
     def __init__(
