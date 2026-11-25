@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+.ashwa.json
+company.db
+reports/
+outputs/
+.pytest_cache/
