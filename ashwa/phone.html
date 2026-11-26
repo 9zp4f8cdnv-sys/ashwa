@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#14213d">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Ashwa CEO</title>
+<style>
+  :root {
+    --bg: #f5f6f8; --card: #ffffff; --text: #16181d; --muted: #6b7280; --line: #e3e5ea;
+    --brand: #14213d; --accent: #2f6fed; --you: #2f6fed; --you-text: #fff;
+    --ok: #1a7f4b; --bad: #c0392b; --warn: #b7791f; --warn-bg: #fff7e6;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0f1115; --card: #181b21; --text: #e8eaed; --muted: #9aa0a6; --line: #2a2e36;
+      --brand: #0b1222; --accent: #6b9bff; --you: #3a66d6; --you-text: #fff;
+      --ok: #4cc38a; --bad: #ef6f62; --warn: #f0b44c; --warn-bg: #2a2416;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body { background: var(--bg); color: var(--text);
+         font: 16px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  header { position: sticky; top: 0; z-index: 2; background: var(--brand); color: #fff;
+           padding: calc(10px + env(safe-area-inset-top)) 16px 10px; display: flex; align-items: center; gap: 10px; }
+  header h1 { font-size: 17px; margin: 0; flex: 1; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; background: #4cc38a; }
+  .dot.busy { background: #f0b44c; animation: pulse 1s infinite; }
+  @keyframes pulse { 50% { opacity: .3; } }
+  main { padding: 12px 16px calc(150px + env(safe-area-inset-bottom)); max-width: 720px; margin: 0 auto; }
+  .hidden { display: none !important; }
+  button { font: inherit; border: 0; border-radius: 10px; padding: 10px 14px; cursor: pointer; }
+  .primary { background: var(--accent); color: #fff; }
+  .ghost { background: transparent; color: inherit; border: 1px solid var(--line); }
+  input, textarea { font: inherit; color: var(--text); background: var(--card); border: 1px solid var(--line);
+                    border-radius: 10px; padding: 10px 12px; width: 100%; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px; margin-bottom: 12px; }
+  .muted { color: var(--muted); font-size: 14px; }
+
+  /* chat */
+  .msg { margin: 8px 0; display: flex; }
+  .bubble { max-width: 88%; padding: 10px 13px; border-radius: 16px; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .you { justify-content: flex-end; }
+  .you .bubble { background: var(--you); color: var(--you-text); border-bottom-right-radius: 4px; }
+  .ceo .bubble { background: var(--card); border: 1px solid var(--line); border-bottom-left-radius: 4px; }
+  .status { justify-content: center; }
+  .status .bubble { font-size: 12.5px; color: var(--muted); padding: 2px 8px; }
+  .bubble a { color: inherit; }
+  .approval { border: 2px solid var(--warn); background: var(--warn-bg); }
+  .approval pre { white-space: pre-wrap; font: inherit; margin: 6px 0 10px; }
+  .row { display: flex; gap: 8px; }
+  .row > * { flex: 1; }
+  .approve { background: #1a7f4b; color: #fff; }
+  .deny { background: #c0392b; color: #fff; }
+
+  /* composer + tabs */
+  footer { position: fixed; left: 0; right: 0; bottom: 0; background: var(--card); border-top: 1px solid var(--line);
+           padding-bottom: env(safe-area-inset-bottom); }
+  .composer { display: flex; gap: 8px; padding: 8px 12px; max-width: 720px; margin: 0 auto; }
+  .composer textarea { resize: none; height: 44px; max-height: 120px; }
+  nav { display: flex; max-width: 720px; margin: 0 auto; }
+  nav button { flex: 1; background: none; color: var(--muted); padding: 8px 0 10px; border-radius: 0; font-size: 13px; }
+  nav button.on { color: var(--accent); font-weight: 600; }
+  .badge { background: var(--bad); color: #fff; border-radius: 9px; padding: 0 6px; font-size: 11px; margin-left: 3px; }
+
+  /* team & money */
+  .kpi { display: flex; justify-content: space-between; gap: 8px; font-size: 14px; padding: 4px 0; border-top: 1px dashed var(--line); }
+  .head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .pill { white-space: nowrap; font-size: 12px; padding: 2px 8px; border-radius: 999px; border: 1px solid currentColor; }
+  .on_track { color: var(--ok); } .stuck { color: var(--bad); } .no_data_yet { color: var(--muted); }
+  .approved { color: var(--ok); } .denied { color: var(--bad); }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .stat { text-align: center; } .stat b { display: block; font-size: 19px; }
+  .report { white-space: pre-wrap; font-size: 14.5px; }
+</style>
+</head>
+<body>
+<header>
+  <div class="dot" id="dot"></div>
+  <h1>Ashwa CEO</h1>
+  <button class="ghost hidden" id="logout" style="color:#fff;padding:6px 10px;font-size:13px">Log out</button>
+</header>
+
+<main>
+  <section id="login" class="card hidden">
+    <h2 style="margin-top:0">Sign in</h2>
+    <form id="loginForm">
+      <input type="password" id="pw" placeholder="Password" autocomplete="current-password" required>
+      <p id="loginErr" class="muted" style="color:var(--bad)"></p>
+      <button class="primary" style="width:100%">Sign in</button>
+    </form>
+  </section>
+
+  <section id="tab-chat" class="hidden">
+    <div id="messages"></div>
+    <div id="pending"></div>
+  </section>
+
+  <section id="tab-team" class="hidden"></section>
+  <section id="tab-money" class="hidden"></section>
+  <section id="tab-reports" class="hidden"></section>
+</main>
+
+<footer id="footer" class="hidden">
+  <form class="composer" id="composer">
+    <textarea id="text" placeholder="Message your CEO…" rows="1"></textarea>
+    <button class="primary" id="sendBtn">Send</button>
+  </form>
+  <nav>
+    <button data-tab="chat" class="on">Chat<span id="pendBadge" class="badge hidden">!</span></button>
+    <button data-tab="team">Team</button>
+    <button data-tab="money">Money</button>
+    <button data-tab="reports">Reports</button>
+  </nav>
+</footer>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const money = (c) => (c < 0 ? "-$" : "$") + (Math.abs(c) / 100).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+// Light formatting on already-escaped text: **bold**, headings, links.
+const fmt = (s) => esc(s)
+  .replace(/^#{1,4} (.*)$/gm, "<b>$1</b>")
+  .replace(/\*\*(.+?)\*\*/g, "<b>$1</b>")
+  .replace(/(https?:\/\/[^\s)<]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
+
+async function api(path, body) {
+  const opts = body === undefined ? {} :
+    {method: "POST", headers: {"Content-Type": "application/json", "X-Ashwa": "1"}, body: JSON.stringify(body)};
+  const r = await fetch(path, opts);
+  if (r.status === 401 && path !== "/api/login") { showLogin(); throw new Error("login"); }
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(data.error || r.statusText);
+  return data;
+}
+
+let tab = "chat", lastCount = -1, pendingId = null, timer = null;
+
+function showLogin() {
+  $("login").classList.remove("hidden");
+  ["tab-chat","tab-team","tab-money","tab-reports","footer","logout"].forEach(i => $(i).classList.add("hidden"));
+  clearInterval(timer);
+}
+
+function showApp() {
+  $("login").classList.add("hidden");
+  $("footer").classList.remove("hidden");
+  $("logout").classList.remove("hidden");
+  switchTab(tab);
+  poll();
+  clearInterval(timer);
+  timer = setInterval(poll, 2000);
+}
+
+function switchTab(t) {
+  tab = t;
+  document.querySelectorAll("nav button").forEach(b => b.classList.toggle("on", b.dataset.tab === t));
+  ["chat","team","money","reports"].forEach(x => $("tab-" + x).classList.toggle("hidden", x !== t));
+  $("composer").classList.toggle("hidden", t !== "chat");
+  if (t === "team" || t === "money") loadCompany();
+  if (t === "reports") loadReports();
+}
+
+async function poll() {
+  let s;
+  try { s = await api("/api/chat"); } catch { return; }
+  $("dot").classList.toggle("busy", s.busy);
+  $("pendBadge").classList.toggle("hidden", !s.pending);
+  renderPending(s.pending);
+  const sig = s.messages.length + ":" + (s.messages.at(-1)?.text.length || 0);
+  if (sig !== lastCount) {
+    lastCount = sig;
+    const nearBottom = innerHeight + scrollY > document.body.scrollHeight - 200;
+    $("messages").innerHTML = s.messages.length ? s.messages.map(m =>
+      `<div class="msg ${m.role}"><div class="bubble">${m.role === "status" ? "· " + esc(m.text) : fmt(m.text)}</div></div>`
+    ).join("") : `<div class="card muted">Say hello to start. On the first run your CEO will ask you
+      about your country, budget, time and skills. Tap <b>Weekly review</b> any time:
+      <p><button class="ghost" onclick="send('Weekly review')">Weekly review</button></p></div>`;
+    if (nearBottom && tab === "chat") scrollTo(0, document.body.scrollHeight);
+  }
+}
+
+function renderPending(p) {
+  if (!p) { if (pendingId) $("pending").innerHTML = ""; pendingId = null; return; }
+  if (p.id === pendingId) return;
+  pendingId = p.id;
+  const title = p.kind === "command" ? "The CEO wants to run a command" : "Your approval is needed";
+  $("pending").innerHTML = `<div class="card approval">
+    <b>${title}</b><pre>${esc(p.prompt)}</pre>
+    <textarea id="note" rows="2" placeholder="Note for the CEO (optional)"></textarea>
+    <div class="row" style="margin-top:8px">
+      <button class="deny" onclick="answer(false)">Deny</button>
+      <button class="approve" onclick="answer(true)">Approve</button>
+    </div></div>`;
+  if (tab === "chat") setTimeout(() => scrollTo(0, document.body.scrollHeight), 50);
+  if (navigator.vibrate) navigator.vibrate(150);
+}
+
+async function answer(approve) {
+  try { await api("/api/answer", {id: pendingId, approve, note: $("note")?.value || ""}); }
+  catch (e) { alert(e.message); }
+  poll();
+}
+
+async function send(text) {
+  text = (text ?? $("text").value).trim();
+  if (!text) return;
+  $("text").value = "";
+  try { await api(text === "Weekly review" ? "/api/review" : "/api/send", {text}); }
+  catch (e) { alert(e.message); }
+  lastCount = -1; poll();
+  setTimeout(() => scrollTo(0, document.body.scrollHeight), 100);
+}
+
+async function loadCompany() {
+  let c;
+  try { c = await api("/api/company"); } catch { return; }
+  const team = c.reviews.length ? c.reviews.map(r => `<div class="card">
+      <div class="head"><b>${esc(r.role)}</b>
+        <span class="pill ${r.status}">${r.status.replaceAll("_", " ")}</span></div>
+      <div class="muted">Agent #${r.staff_id} · version ${r.version}</div>
+      ${r.kpis.map(k => `<div class="kpi"><span>${esc(k.name)}</span>
+        <span>${k.last_readings.length ? esc(k.last_readings.join(", ")) : "–"} / target ${k.direction === "lower" ? "≤" : "≥"} ${esc(k.target)}</span></div>`).join("")}
+      ${r.reasons.map(x => `<div class="muted" style="color:var(--bad)">${esc(x)}</div>`).join("")}
+    </div>`).join("") : `<div class="card muted">No AI staff yet. The CEO hires them after choosing a business.</div>`;
+  const profile = typeof c.founder_profile === "object" ? Object.entries(c.founder_profile)
+      .map(([k, v]) => `<div class="kpi"><span>${esc(k)}</span><span>${esc(v)}</span></div>`).join("")
+      : `<div class="muted">Not set yet: chat with the CEO to start the interview.</div>`;
+  $("tab-team").innerHTML = team + `<div class="card"><b>About you</b>${profile}</div>`;
+
+  const m = c.money;
+  $("tab-money").innerHTML = `<div class="card stats">
+      <div class="stat"><span class="muted">In</span><b class="approved">${money(m.income_cents)}</b></div>
+      <div class="stat"><span class="muted">Out</span><b class="denied">${money(m.expense_cents)}</b></div>
+      <div class="stat"><span class="muted">Profit</span><b>${money(m.profit_cents)}</b></div></div>
+    <div class="card"><b>Approvals</b>${c.approvals.length ? c.approvals.map(a => `
+      <div class="kpi"><span>${esc(a.kind)}: ${esc(a.summary)}${a.amount_cents ? " · " + money(a.amount_cents) : ""}</span>
+      <span class="${a.status}">${a.status}</span></div>`).join("") : `<div class="muted">None yet.</div>`}</div>`;
+}
+
+async function loadReports() {
+  let list;
+  try { list = await api("/api/reports"); } catch { return; }
+  $("tab-reports").innerHTML = list.length ? list.map(n =>
+    `<div class="card" style="cursor:pointer" onclick="openReport('${esc(n)}')"><b>${esc(n.replace(/\.md$/, ""))}</b></div>`
+  ).join("") : `<div class="card muted">No reports yet. Tap Weekly review in the chat to get one.</div>`;
+}
+
+async function openReport(name) {
+  const r = await api("/api/reports/" + encodeURIComponent(name));
+  $("tab-reports").innerHTML = `<button class="ghost" onclick="loadReports()">← All reports</button>
+    <div class="card report" style="margin-top:10px">${fmt(r.text)}</div>`;
+}
+
+$("loginForm").onsubmit = async (e) => {
+  e.preventDefault();
+  try { await api("/api/login", {password: $("pw").value}); $("pw").value = ""; $("loginErr").textContent = ""; showApp(); }
+  catch (err) { $("loginErr").textContent = err.message; }
+};
+$("logout").onclick = async () => { await api("/api/logout", {}); showLogin(); };
+$("composer").onsubmit = (e) => { e.preventDefault(); send(); };
+$("text").addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey && innerWidth > 700) { e.preventDefault(); send(); } });
+document.querySelectorAll("nav button").forEach(b => b.onclick = () => switchTab(b.dataset.tab));
+
+api("/api/me").then(r => r.logged_in ? showApp() : showLogin()).catch(showLogin);
+</script>
+</body>
+</html>
