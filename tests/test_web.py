@@ -114,3 +114,17 @@ def test_company_view(setup):
     login(client)
     c = client.get("/api/company").get_json()
     assert c["money"]["profit_cents"] == 0 and c["reviews"] == [] and c["approvals"] == []
+
+
+def test_setup_error_shows_in_chat(tmp_path):
+    import anthropic
+    import httpx2 as httpx
+    from ashwa.web import managed_agents_turn
+
+    def bad_state():
+        req = httpx.Request("POST", "https://api.anthropic.com/v1/agents")
+        raise anthropic.AuthenticationError("invalid x-api-key", response=httpx.Response(401, request=req), body=None)
+
+    worker = CEOWorker(tmp_path / "d", managed_agents_turn(None, bad_state))
+    worker.send("hello")
+    assert wait_for(lambda: any("API_KEY was rejected" in m["text"] for m in worker.snapshot()["messages"]))

@@ -89,7 +89,7 @@ class CEOWorker:
             try:
                 self.start_turn(text, tools, self)
             except Exception as e:  # show the error instead of killing the worker
-                self._add("status", f"Error: {e!r}")
+                self._add("status", explain_api_error(e))
             finally:
                 with self.lock:
                     self.busy = False
@@ -129,15 +129,41 @@ class CEOWorker:
         return True
 
 
-def managed_agents_turn(client, state: dict) -> Callable:
-    """The real `start_turn`: one Managed Agents session per server run."""
+def explain_api_error(e: Exception) -> str:
+    """Turn an API failure into something the founder can act on from a phone."""
+    import anthropic
+    if isinstance(e, anthropic.AuthenticationError):
+        return "Your ANTHROPIC_API_KEY was rejected. Check it on platform.claude.com → API Keys and paste it again in Render → Environment."
+    if isinstance(e, anthropic.PermissionDeniedError):
+        return f"Your Claude account isn't allowed to do this yet: {e.message}"
+    if isinstance(e, anthropic.RateLimitError):
+        return "Claude is rate-limiting this account. Wait a minute and try again."
+    if isinstance(e, anthropic.APIStatusError):
+        msg = e.message or ""
+        if "credit" in msg.lower() or "billing" in msg.lower():
+            return "Your Claude account has no credit. Add some at platform.claude.com → Billing."
+        return f"Claude API error {e.status_code}: {msg}"
+    if isinstance(e, anthropic.APIConnectionError):
+        return "Couldn't reach the Claude API. Try again in a minute."
+    return f"Error: {e!r}"
+
+
+def managed_agents_turn(client, get_state: Callable[[], dict]) -> Callable:
+    """The real `start_turn`: one Managed Agents session per server run.
+    The agent is set up on the first message, so a setup problem shows in the
+    chat instead of stopping the server."""
     from .session import SessionRunner, create_session
 
     holder: dict = {}
 
     def start_turn(text: str, tools: CompanyTools, worker: CEOWorker) -> None:
         if "runner" not in holder:
-            s = create_session(client, state, "CEO (phone)")
+            try:
+                state = get_state()
+                s = create_session(client, state, "CEO (phone)")
+            except Exception as e:
+                worker._add("status", "Setup failed: " + explain_api_error(e))
+                return
             holder["runner"] = SessionRunner(
                 client, s.id, tools,
                 on_text=lambda t: worker._add("ceo", t),

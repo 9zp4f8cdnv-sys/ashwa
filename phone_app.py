@@ -28,16 +28,45 @@ from ashwa.staff import StaffRunner
 from ashwa.web import CEOWorker, create_app, managed_agents_turn
 
 
+def config_problem() -> str | None:
+    if len(os.environ.get("ASHWA_PASSWORD", "")) < 8:
+        return "ASHWA_PASSWORD must be at least 8 characters."
+    if not os.environ.get("ANTHROPIC_API_KEY", "").strip():
+        return "ANTHROPIC_API_KEY is missing (get one at platform.claude.com → API Keys)."
+    return None
+
+
+def setup_needed_app(problem: str):
+    """On a cloud host, serve a page that says what to fix instead of crashing."""
+    from html import escape
+
+    from flask import Flask
+    app = Flask(__name__)
+
+    @app.route("/", defaults={"path": ""})
+    @app.route("/<path:path>")
+    def fix_me(path):
+        return (f"<!doctype html><meta name=viewport content='width=device-width,initial-scale=1'>"
+                f"<body style='font:18px/1.5 -apple-system,sans-serif;padding:24px'>"
+                f"<h2>Ashwa needs one more setting</h2><p>{escape(problem)}</p>"
+                f"<p>In Render: open the <b>ashwa</b> service → <b>Environment</b> → edit the value → "
+                f"<b>Save, rebuild and deploy</b>.</p>"), 503
+    return app
+
+
 def build_app():
-    password = os.environ.get("ASHWA_PASSWORD", "")
-    if len(password) < 8:
-        raise SystemExit("Set ASHWA_PASSWORD to a password of at least 8 characters first.")
-    if not os.environ.get("ANTHROPIC_API_KEY"):
-        raise SystemExit("Set ANTHROPIC_API_KEY first (from platform.claude.com).")
+    problem = config_problem()
+    if problem:
+        if os.environ.get("ASHWA_BEHIND_PROXY") == "1":
+            return setup_needed_app(problem)
+        raise SystemExit(problem)
+    password = os.environ["ASHWA_PASSWORD"]
 
     client = anthropic.Anthropic()
-    state = ensure_agent(client, update=False)
-    worker = CEOWorker(DB_FILE, managed_agents_turn(client, state), staff_runner=StaffRunner(client))
+    # The CEO agent is created on the first message, so the page always comes up
+    # and any setup problem (bad key, no credit) shows in the chat.
+    worker = CEOWorker(DB_FILE, managed_agents_turn(client, lambda: ensure_agent(client, update=False)),
+                       staff_runner=StaffRunner(client))
     app = create_app(worker, password=password, db_path=DB_FILE,
                      secret_key=os.environ.get("ASHWA_SECRET_KEY"))
 

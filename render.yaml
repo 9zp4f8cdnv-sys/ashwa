@@ -10,7 +10,7 @@ services:
     buildCommand: pip install -r requirements.txt
     # One worker only: the CEO runs in a background thread inside it.
     startCommand: gunicorn -w 1 --threads 8 --timeout 120 -b 0.0.0.0:$PORT 'phone_app:build_app()'
-    healthCheckPath: /
+    healthCheckPath: /api/me
     disk:
       name: ashwa-data
       mountPath: /data
