@@ -13,8 +13,8 @@ from typing import Callable
 import anthropic
 
 from .company import CompanyTools, ToolError
+from .paths import OUTPUTS_DIR, STATE_FILE  # noqa: F401  (STATE_FILE re-exported)
 
-STATE_FILE = Path(".ashwa.json")
 
 GREETING = "Hello. Check where we are and tell me what you need from me."
 REVIEW_PROMPT = (
@@ -127,7 +127,7 @@ class SessionRunner:
         self.send([{"type": "user.tool_confirmation", "tool_use_id": ev.id,
                     "result": "allow" if allowed else "deny"}])
 
-    def download_outputs(self, out_root: Path = Path("outputs"), retries: int = 1) -> list[Path]:
+    def download_outputs(self, out_root: Path = OUTPUTS_DIR, retries: int = 1) -> list[Path]:
         out_dir = out_root / self.session_id
         files = []
         for attempt in range(retries):  # files are indexed a second or two after idle

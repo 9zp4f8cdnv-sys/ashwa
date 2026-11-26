@@ -1,0 +1,30 @@
+# One-tap cloud deploy on Render (https://render.com), for running Ashwa
+# without a computer. See "Run it from your iPhone" in the README.
+services:
+  - type: web
+    name: ashwa
+    runtime: python
+    # A paid plan is needed for the persistent disk that keeps company.db,
+    # reports and the agent IDs across restarts and deploys.
+    plan: starter
+    buildCommand: pip install -r requirements.txt
+    # One worker only: the CEO runs in a background thread inside it.
+    startCommand: gunicorn -w 1 --threads 8 --timeout 120 -b 0.0.0.0:$PORT 'phone_app:build_app()'
+    healthCheckPath: /
+    disk:
+      name: ashwa-data
+      mountPath: /data
+      sizeGB: 1
+    envVars:
+      - key: ANTHROPIC_API_KEY
+        sync: false          # Render asks you to paste it during setup
+      - key: ASHWA_PASSWORD
+        sync: false          # the password for the phone page (8+ characters)
+      - key: ASHWA_SECRET_KEY
+        generateValue: true  # keeps you logged in across restarts
+      - key: ASHWA_DATA_DIR
+        value: /data
+      - key: ASHWA_BEHIND_PROXY
+        value: "1"
+      - key: PYTHON_VERSION
+        value: "3.12.7"

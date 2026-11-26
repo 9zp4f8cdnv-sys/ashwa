@@ -152,14 +152,15 @@ def managed_agents_turn(client, state: dict) -> Callable:
     return start_turn
 
 
-def create_app(worker: CEOWorker, *, password: str, db_path, report_dir: Path = Path("reports"),
+def create_app(worker: CEOWorker, *, password: str, db_path, report_dir: Path | None = None,
                secret_key: str | None = None) -> Flask:
     if not password or len(password) < 8:
         raise ValueError("Set a password of at least 8 characters (ASHWA_PASSWORD).")
     app = Flask(__name__)
     app.secret_key = secret_key or secrets.token_hex(32)
     app.config.update(SESSION_COOKIE_HTTPONLY=True, SESSION_COOKIE_SAMESITE="Strict")
-    report_dir = Path(report_dir)
+    from .paths import REPORTS_DIR
+    report_dir = Path(report_dir) if report_dir is not None else REPORTS_DIR
     failures: dict[str, list[float]] = {}
 
     def login_required(fn):

@@ -18,6 +18,7 @@ from pathlib import Path
 from typing import Any, Callable
 
 from .db import row_to_dict
+from .paths import REPORTS_DIR
 
 MAX_ACTIVE_STAFF = 8
 
@@ -89,12 +90,12 @@ class CompanyTools:
         *,
         run_staff_task: StaffTaskFn | None = None,
         confirm: ConfirmFn = lambda prompt: (False, "No founder is available to approve."),
-        report_dir: Path = Path("reports"),
+        report_dir: Path | None = None,
     ):
         self.db = conn
         self.run_staff_task = run_staff_task
         self.confirm = confirm  # default: deny (unattended runs can't approve anything)
-        self.report_dir = Path(report_dir)
+        self.report_dir = Path(report_dir) if report_dir is not None else REPORTS_DIR
         self._handlers: dict[str, Callable[[dict], Any]] = {
             name: getattr(self, name) for name in self._schemas()
         }

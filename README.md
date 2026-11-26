@@ -56,7 +56,30 @@ real people.** If a human is involved, it can only send you a written recommenda
 | KPIs come from real numbers, with a note of where each came from | `record_kpi` |
 | No tool exists that pays, signs, publishes or sends | — |
 
-## Setup
+## Run it from your iPhone (no computer needed)
+
+The app runs on a small cloud server at [Render](https://render.com), and you open its
+link on your phone. Everything below works in Safari.
+
+1. Get an API key: [platform.claude.com](https://platform.claude.com) → **Billing**
+   (add a card and set a **monthly limit**) → **API Keys** → **Create Key**. Copy it.
+2. Tap **[Deploy to Render](https://render.com/deploy?repo=https://github.com/9zp4f8cdnv-sys/Ashwa)**
+   and sign in **with GitHub**. Allow Render to see the **Ashwa** repo if asked.
+3. Render shows the settings from `render.yaml`. Fill in:
+   - `ANTHROPIC_API_KEY`: paste your key
+   - `ASHWA_PASSWORD`: a password of 8 or more characters for the phone page
+4. Tap **Deploy** (or **Apply**), add a card for Render, and wait about 3–5 minutes
+   until it says **Live**.
+5. Open the `https://ashwa-….onrender.com` link at the top, sign in, and say hello.
+   In Safari, tap Share → **Add to Home Screen** to make it look like an app.
+
+Costs: Render's Starter plan with a 1 GB disk is about US$7–8 a month (the disk keeps
+your company records safe across restarts). Claude API usage is billed separately by
+Anthropic.
+
+To update after a code change: Render redeploys automatically when `main` changes.
+
+## Setup on a computer
 
 ```bash
 pip install -r requirements.txt

@@ -43,7 +43,7 @@ def yes_no(prompt: str) -> bool:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--review", action="store_true", help="run the weekly review and report")
-    parser.add_argument("--db", help="SQLite file (default: company.db or $ASHWA_DB)")
+    parser.add_argument("--db", help="SQLite file (default: company.db in ASHWA_DATA_DIR, or $ASHWA_DB)")
     args = parser.parse_args()
 
     if not STATE_FILE.exists():

@@ -107,7 +107,9 @@ CREATE TABLE IF NOT EXISTS decisions (
 
 
 def connect(path: str | os.PathLike | None = None) -> sqlite3.Connection:
-    path = path or os.environ.get("ASHWA_DB", "company.db")
+    if path is None:
+        from .paths import DB_FILE
+        path = DB_FILE
     if str(path) != ":memory:":
         Path(path).parent.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(path)
